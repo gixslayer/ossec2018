@@ -1,0 +1,63 @@
+Ciske Harsema - s1010048
+Stefan Jans - s1013414
+
+1.a)
+
+[required]
+
+Example: auth required pam_deny.so
+
+Required must be successful, but in case of failure the rest of the stack is still executed. This allows for
+other modules in the stack to perform some cleanup/logging operations if needed.
+
+[requisite]
+
+Example: auth requisite pam_shells.so
+
+Requisite is much like required, except that failure will terminate and will not execute the rest of the stack.
+This could be desired, but care should also be taken that no information leaks (eg invalid username + password
+terminating at invalid username and not check password could perhaps leak when a username exists even if the
+password is invalid, of course this information shouldn't leak/be detectable to begin with).
+
+[sufficient]
+
+Example: auth sufficient pam_rootok.so
+
+Sufficient provides a way to allow a certain condition access without having to perform the rest of the stack.
+This can be used to for instance special case that the root user has permission, before doing the logic for
+normal users. If sufficient fails the module is essentially ignored and the rest of the stack is executed.
+
+[optional]
+
+Example: session optional pam_motd.so noupdate
+
+For optional the result is essentially ignored, and it can be used as a way to execute supporting tasks. For
+example display the message of the day.
+
+1.b)
+
+[/tmp/users]
+user1
+user2
+
+[/etc/pam.d/sshd]
+
+i)
+The following rule will deny users in the file, even if their password is valid
+(add somewhere near the beginning)
+
+auth required pam_listfile.so onerr=succeed item=user sense=deny file=/tmp/users
+
+Using required to force an auth failure, regardless of the normal authentication stack
+
+ii)
+Not possible as public keys are handled by sshd and not pam, so it would require modifications to sshd_config
+
+iii)
+The following rule will allow users in the file, even if their password is invalid.
+Again public keys are handled by sshd itself, and not via pam.
+(add somewhere near the beginning)
+
+auth sufficient pam_listfile.so onerr=succeed item=user sense=allow file=/tmp/users
+
+Using sufficient to exit out of the normal authentication stack if user is whitelisted
