@@ -1,0 +1,7 @@
+[a]
+This register is essentially a bitset that is used in protected mode to control various operations, such as Protection Key Enable. Only a privileged program should be able to modify and access them as the exact configuration could be security sensitive, and thus should not be exposed to user mode programs.
+
+[b]
+Instruction causing SIGSEGV: mov %cr4, %rax
+
+This attempts to assign the value in the cr4 register to the rax register.
