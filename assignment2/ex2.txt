@@ -1,0 +1,31 @@
+2a)
+
+The script was tested on lilo and worked correctly. On Kali (VirtualBox) it
+broke as somehow libc displaced the location of the gadget and system/exit
+functions by 0x22000. The gadget was found correctly in libc.so.6, but after
+adding the load address of libc and the offset of the gadget the result was of
+by 0x22000. If 0x22000 is subtracted from the offsets (or libc address) it did
+work correctly. We opted to leave the version working in lilo as is.
+
+
+victim.c compiled with: gcc -o victim -g -fno-stack-protector -std=c99 victim.c
+
+2b)
+
+jump to gadget: correct
+correct rdi address: correct (points to '/bin/ls')
+jump to system: correct
+correct syscall: 0x38=56 (sys_clone) -> correct
+
+follows by calling execve("/bin/sh", {"sh", "-c", "", NULL}, {ENV...,NULL}) in child
+
+
+256 buffer version calls: execve("/bin/sh", {"sh", "-c", "/bin/ls", NULL}, {ENV...,NULL})
+
+So the command to execute is lost, which explains why the attack no longer works.
+
+2c)
+
+the string "/bin/sh" is inside libc itself, so if ASLR isn't a problem then an
+address/offset inside libc can be given, rather than having to provide this
+string in the overflown buffer and providing an address to the buffer.
