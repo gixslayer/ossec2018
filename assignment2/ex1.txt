@@ -1,3 +1,6 @@
+Ciske Harsema - s1010048
+Stefan Jans - s1013414
+
 [a]
 This register is essentially a bitset that is used in protected mode to control various operations, such as Protection Key Enable. Only a privileged program should be able to modify and access them as the exact configuration could be security sensitive, and thus should not be exposed to user mode programs.
 
