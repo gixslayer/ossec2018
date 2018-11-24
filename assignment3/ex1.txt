@@ -1,0 +1,66 @@
+1a)
+
+# read@plt
+objdump -d vuln | grep read@plt | awk '{print $8}'
+
+which printed 401070
+
+# system@plt
+objdump -d vuln | grep system@plt | awk '{print $8}'
+
+which printed 401050
+
+1b)
+
+it is a gadget that can be used to assign values to the rdi, rsi and rdx
+registers, followed by a ret, thus allowing a jump
+
+basically the following stack (in order of increasing address):
+
+a, b, c, d
+
+results in:
+
+rdi = a
+rsi = b
+rdx = c
+rip = d
+
+(ii)
+
+found gadget using the following command:
+
+objdump -dF vuln | grep helper -A 6
+
+producing output:
+
+0000000000401162 <helper> (File Offset: 0x1162):
+  401162:	55                   	push   %rbp
+  401163:	48 89 e5             	mov    %rsp,%rbp
+  401166:	5f                   	pop    %rdi
+  401167:	5e                   	pop    %rsi
+  401168:	5a                   	pop    %rdx
+  401169:	c3                   	retq
+
+thus at memory location 0x401166  
+
+1c)
+
+using readelf -S vuln to list sections
+
+.bss (size=0x10) at 0x404050, which is writable
+
+The bss section contains statically allocated variables that are not explicitly allocated, which makes it a great location to use as storage. Most systems will zero initialize this memory at load time. The only potential danger is that data is modified that is used by the program itself, potentially leading to a crash. This is not the case with this simple program however. An alternative section could be the .data section in that case.
+
+1d)
+
+Stage 1: this will build a stack sequence that uses the ROP gadget such that it executes 'read(0, writeable, 8)', meaning it will read 8 bytes from FD 0 (stdin) and store them at the writeable memory location we specified earlier.
+
+Stage 2: this will build another stack sequence using the same ROP gadget such that it executes 'system(writeable)', meaning it will execute writeable as a C string shell command.
+
+1e)
+
+The vuln program first reads 400 bytes from stdin, and saves it in a stack buffer called buf. Since this buffer is only 150 bytes in size we have a buffer overflow. After reading from stdin the vuln program will echo the received data to stdout.
+
+The exploit first constructs the exploit input, which first repeats the character 'A' 168 times to pad till the return address, and then appends the stages 1 and 2. This exploit input is then sent to the vuln program via a socket. The explot script then retrieves the echo-ed output from the vuln program. After this echo the vuln program will try to exit, and thus trigger stage 1. This stage calls read, so the exploit script sends the '/bin/sh' string so that the string '/bin/sh' is stored in the writeable buffer in the vuln program. Then stage 2 will be triggered after the read, causing '/bin/sh' to be executed as a shell command, thus popping the shell. At this point the eploit script will use telnet to get the interactive shell.
+
