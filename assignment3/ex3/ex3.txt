@@ -1,0 +1,31 @@
+3a)
+
+Tested with 2 non-root users (user1 and user2) as follows:
+
+First set up the channels
+
+# as user1 in /home/user1/
+touch 1.channel
+touch 1.sync
+chmod 000 1.channel
+chmod 000 1.sync
+
+# as user2 in /home/user2/
+touch 2.channel
+touch 2.sync
+chmod 000 2.channel
+chmod 000 2.sync
+
+Then execute the following commands (order does not matter)
+
+# as user1 in /home/user1/
+./write-proc /home/user2/2.channel 1.sync 1.channel /home/user2/2.sync
+
+# as user2 in /home/user2/
+./read-proc /home/user1/1.channel 2.sync 2.channel /home/user1/1.sync
+
+See example.png for example output
+
+3b)
+
+Since the communication channel does not rely on any error behaviour, no errors or warnings are generated in the logs as far as I could tell. Of course the files do have rather strange permission combinations, as well as being changed very often, which could be considered unusual by a system monitor. In this case the number of data bits could be reduced to one, so that there are just 2 bits used (1 control and 1 data), which could generate much more reasonable permission combinations. The rate of communication could also be drastically reduces, and the files could be changed often as well. All this results in much harder to detect communication (at the cost of speed).
