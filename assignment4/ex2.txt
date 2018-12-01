@@ -1,0 +1,58 @@
+Ciske Harsema - s1010048
+Stefan Jans - s1013414
+
+2a)
+
+peter is (secret, application)
+starts as (unclassified, untrusted)?
+
+// i: read /usr/bin/someprog (unclassified, application)
+
+allowed, as unclassified <= secret, and application >= untrusted.
+no changes.
+
+// ii: read /usr/lib/somelib.so (unclassified, system)
+
+allowed, as unclassified <= secret, and system >= untrusted.
+no changes.
+
+// iii: read /home/peter/database (confidential, user)
+
+allowed, as confidential <= secret, and user >= untrusted.
+peter 'session' changed to (confidential, untrusted).
+
+// iv: write socket (unclassified, untrusted)
+
+not allowed, as unclassified > confidential (not ok), but untrusted <= untrusted (ok).
+no changes.
+
+// v: read /etc/password (confidential, trusted)
+
+allowed, as confidential <= secret, and trusted >= untrusted.
+no changes.
+
+// vi: write /etc/shadow (top secret, trusted)
+
+not allowed, as top secret >= confidential (ok), but trusted > application (not ok).
+no changes.
+
+2b)
+
+write /home/peter/out.
+
+Bell-LaPadula: no write-down so security level must be >= confidential.
+Biba: no write-up so integrity level must be <= application (currently at untrusted, but can increase to application).
+
+so the following pairs are permitted:
+
+(confidential, untrusted)
+(confidential, user)
+(confidential, application)
+(secret, untrusted)
+(secret, user)
+(secret, application)
+(top secret, untrusted)
+(top secret, user)
+(top secret, application)
+
+Note that the trust/integrity level will be set to the chosen integrity level.
