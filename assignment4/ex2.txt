@@ -4,36 +4,38 @@ Stefan Jans - s1013414
 2a)
 
 peter is (secret, application)
-starts as (unclassified, untrusted)?
+starts as (unclassified, application) due to weak tranquility, meaning security level can increase up to secret if needed (but not down again).
 
 // i: read /usr/bin/someprog (unclassified, application)
 
-allowed, as unclassified <= secret, and application >= untrusted.
+allowed, as unclassified <= unclassified (no read-up), and application >= application (no read-down).
 no changes.
 
 // ii: read /usr/lib/somelib.so (unclassified, system)
 
-allowed, as unclassified <= secret, and system >= untrusted.
+allowed, as unclassified <= unclassified (no read-up), and system >= application (no read-down).
 no changes.
 
 // iii: read /home/peter/database (confidential, user)
 
-allowed, as confidential <= secret, and user >= untrusted.
-peter 'session' changed to (confidential, untrusted).
+confidential > unclassified, so this would fail with strong tranquility, but we can escalate the security level from unclassified to confidential (as unclassified < confidential <= secret).
+not allowed, as confidential <= confidential (ok after escalation, no read-up), but user < application (not ok, as read-down).
+no changes, assuming we do not actually perform the escalation as the Biba rule failed.
 
 // iv: write socket (unclassified, untrusted)
 
-not allowed, as unclassified > confidential (not ok), but untrusted <= untrusted (ok).
+allowed, as unclassified >= unclassified (no write-down), and untrusted <= application (no write-up).
 no changes.
 
 // v: read /etc/password (confidential, trusted)
 
-allowed, as confidential <= secret, and trusted >= untrusted.
-no changes.
+confidential > unclassified, so this would fail with strong tranquility, but we can escalate the security level from unclassified to confidential (as unclassified < confidential <= secret).
+after escalating it is allowed, as confidential <= confidential (no read-up), and trusted >= application (no read-down).
+security level changes to confidential.
 
 // vi: write /etc/shadow (top secret, trusted)
 
-not allowed, as top secret >= confidential (ok), but trusted > application (not ok).
+not allowed, as top secret >= confidential (ok, no write-down), but trusted > application (not ok, as write-up).
 no changes.
 
 2b)
@@ -41,7 +43,7 @@ no changes.
 write /home/peter/out.
 
 Bell-LaPadula: no write-down so security level must be >= confidential.
-Biba: no write-up so integrity level must be <= application (currently at untrusted, but can increase to application).
+Biba: no write-up so integrity level must be <= application.
 
 so the following pairs are permitted:
 
@@ -54,5 +56,3 @@ so the following pairs are permitted:
 (top secret, untrusted)
 (top secret, user)
 (top secret, application)
-
-Note that the trust/integrity level will be set to the chosen integrity level.
